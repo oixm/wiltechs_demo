@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>Game</title>
+<style>
+.title { margin: 10px; font-size: 20px; }
+.panel { display: flex; flex-flow: column nowrap; }
+.panel .line { display: flex; flex-flow: row nowrap; }
+.panel .line .item { margin: 10px; width: 50px; height: 100px; background: #CCC; }
+.panel .line .item.selected { background: #F00; }
+.panel.p2 .line .item.selected { background: #00F; }
+</style>
+</head>
+<body>
+<div id="title" class="title"></div>
+<div id="panel" class="panel"></div>
+
+<script src="https://apps.bdimg.com/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>
+
+class Game {
+
+	constructor() {
+		this.preset = [3, 5, 7];	// 预设牙签数量
+		this.data = [];				// 当前牙签数量
+		this.player = 0;			// 当前玩家 1:P1|2:P2
+	}
+
+	// 开始
+	start() {
+		this.data = [...this.preset];
+		this.player = 1;
+		this.render();
+	}
+
+	// UI 渲染
+	render() {
+		$("#title").text("轮到玩家 P" + this.player);
+		$("#panel").empty().toggleClass("p2", this.player == 2);
+		var _this = this;
+		this.data.forEach((num, line) => {
+			var $line = $("<div class='line'>").appendTo("#panel");
+			for (var i = 0; i < num; i++) {
+				var $item = $("<div class='item'>").appendTo($line);
+				$item.mouseover(this.preSelectItem);
+				(function(line, i) {
+					$item.click(() => {
+						_this.selectItem(line, i);
+					});
+				})(line, i);
+			}
+		});
+	}
+
+	// 准备选择数量
+	preSelectItem() {
+		var line = $(this).closest(".line").index();
+		var n = $(this).index();
+		$(".item").removeClass("selected");
+		$(".line:eq(" + line + ") .item:lt(" + (n + 1) + ")").addClass("selected");
+	}
+
+	// 选择数量
+	selectItem(line, n) {
+		this.data[line] -= (n + 1);
+		if (this.data.every(num => num == 0)) return this.gameOver();
+		this.player = this.player == 1 ? 2 : 1;
+		this.render();
+	}
+
+	// 游戏结束
+	gameOver() {
+		$("#title").text("玩家 P" + this.player + " 输了（3s 后重新开始）");
+		setTimeout(() => this.start(), 3000);
+	}
+}
+
+// 游戏实例
+new Game().start();
+
+</script>
+</body>
+</html>
